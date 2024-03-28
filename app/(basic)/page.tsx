@@ -2,7 +2,7 @@ import React from 'react'
 
 const Page = () => {
   return (
-    <div>Root page</div>
+    <div>Root page abs</div>
   )
 }
 

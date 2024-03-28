@@ -16,6 +16,7 @@ const Register = () => {
       console.log('authenticated');
       router.push('/');
     }
+    console.log(session);
   },[session?.status, router])
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
