@@ -1,11 +1,23 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState } from 'react'
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
+import { signIn, useSession } from 'next-auth/react';
 
 const Register = () => {
+  const session = useSession();
+  const router = useRouter();
+
+  useEffect(()=>{
+    if (session?.status === 'authenticated') {
+      console.log('authenticated');
+      router.push('/');
+    }
+  },[session?.status, router])
+
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   function togglePasswordVisibility() {
     setIsPasswordVisible(prevState => !prevState);
@@ -52,7 +64,17 @@ const Register = () => {
       })
 
       const json = await res.json();
-      console.log(json);
+      if (json.message === 'success') {
+        toast.success('Đăng ký thành công');
+        await signIn('credentials', {
+            redirect: false,
+            phone: data.phone,
+            password: data.password,
+        });
+        router.refresh();
+      } else {
+        toast.error(json.message);
+      }
     } catch (error) {
       console.log(error);
       toast.error('Đăng ký thất bại');
