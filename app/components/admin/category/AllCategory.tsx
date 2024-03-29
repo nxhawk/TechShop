@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import React from 'react'
 import { Category } from '@prisma/client';
+import CategoryForm from './CategoryForm';
 
 const AllCategory = ({role}:{role: string}) => {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -26,6 +27,11 @@ const AllCategory = ({role}:{role: string}) => {
           ))
         }
       </div>
+      {role === 'ADMIN' && (
+        <div className='mt-10'>
+            <CategoryForm mode='add'/>
+        </div>
+      )}
     </div>
   )
 }
