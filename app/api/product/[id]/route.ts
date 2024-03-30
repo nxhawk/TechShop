@@ -1,7 +1,7 @@
 import { getErrorMessage } from '@/utils/helper';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { NextResponse } from 'next/server';
-import { getProduct, updateProduct, ProductNotFound } from '@/models/product';
+import { getProduct, updateProduct, ProductNotFound,deleteProduct } from '@/models/product';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -109,5 +109,34 @@ export async function PATCH(request: Request,{params}:{params:{id:string}}){
                 status: 500,
             },
         );
-  }
+}
+}
+
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+    try {
+        const { id } = params;
+        if (!id) {
+            return NextResponse.json({ message: 'Missing id' }, { status: 400 });
+        }
+        const product = await deleteProduct(id);
+        return NextResponse.json({ message: 'success', data: product });
+    } catch (error) {
+        console.log('Error deleting product', getErrorMessage(error));
+
+        if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === 'P2023') {
+                return NextResponse.json({ message: 'Invalid product id' }, { status: 400 });
+            }
+            if (error.code === 'P2025') {
+                return NextResponse.json({ message: 'Product not found' }, { status: 400 });
+            }
+        }
+
+        return NextResponse.json(
+            { message: `Internal Server Error: ${getErrorMessage(error)}` },
+            {
+                status: 500,
+            },
+        );
+    }
 }

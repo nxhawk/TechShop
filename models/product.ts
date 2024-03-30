@@ -255,3 +255,20 @@ export async function updateProduct(
 
   return newProduct;
 }
+
+export async function deleteProduct(id: string) {
+  const product = await prisma.product.delete({
+    where:{
+      id
+    },
+    include:{
+      attachments: true
+    }
+  });
+
+  if (!product) {
+    throw ProductNotFound;
+  }
+
+  return product;
+}

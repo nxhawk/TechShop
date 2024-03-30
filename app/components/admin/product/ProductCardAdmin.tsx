@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { defaultValue } from '../../Constant';
 import { CurrencyFormatter, RatingFormatter } from '@/utils/formatter';
+import DeleteProductModal from './DeleteProductModal';
 
 interface Props {
   className?: string;
@@ -95,11 +96,11 @@ const ProductCardAdmin = ({ className, product }: Props) => {
           >
               <i className='bi bi-trash3-fill'></i> Delete
           </button>
-          {/* <DeleteProductModal
+          <DeleteProductModal
               ProductId={product.id}
               showing={showingDeleteModal}
               setShowing={setShowingDeleteModal}
-          /> */}
+          />
       </div>
     </div>
   )
