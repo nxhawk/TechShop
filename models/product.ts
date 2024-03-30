@@ -3,7 +3,7 @@ import prisma from '../libs/prismadb';
 import { SortingOptions } from '@/app/components/Constant';
 import { Attachment, Brand, Category, Product, Review } from '@prisma/client';
 import { FullCartItem } from './user';
-import { createAttachments } from './attachment';
+import { createAttachments, deleteAttachments } from './attachment';
 
 export type FullProduct = Product & {
   category: Category | null;
@@ -26,6 +26,33 @@ export type MyCart = {
 
 export const ProductNotFound = new Error('Product not found');
 export const NotEnoughQuantity = new Error('Not enough quantity');
+
+export async function getProduct(id?: string) {
+  const product = await prisma.product.findFirst({
+    where:{
+      id
+    },
+    include:{
+      attachments: true,
+      brand: true,
+      category: true,
+      Reviews: {
+        include:{
+          User:{
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          }
+        }
+      }
+    }
+  })
+
+  return product;
+}
 
 export async function numberOfProducts(categorySlug?: string, min?: number, max?: number) {
   const products = await prisma.product.count({
@@ -147,6 +174,84 @@ export async function createProduct(
       }
     }
   })
+
+  return newProduct;
+}
+
+export async function updateProduct(
+  id: string,
+  name: string,
+  quantity: number,
+  price: number,
+  sale: number,
+  description: string,
+  brandId: string,
+  categoryId: string,
+  attachments: string[],
+){
+  const oldProduct = await prisma.product.update({
+    where: {
+        id
+    },
+    data: {
+        name,
+        slug: toSlug(name),
+        quantity,
+        price,
+        sale,
+        description,
+        brand: {
+            connect: {
+                id: brandId,
+            },
+        },
+        category: {
+            connect: {
+                id: categoryId,
+            },
+        },
+    },
+    include: {
+        attachments: true,
+    },
+  });
+
+  if (!oldProduct) {
+    throw ProductNotFound;
+  }
+
+  const attachmentsToAdd = attachments.filter(attachment => attachment.startsWith('data:'));
+  const attachmentsToRemove = oldProduct.attachments.filter(oldAttachment => {
+    return !attachments.some(attachment => {
+        return oldAttachment.path === attachment;
+    });
+  });
+
+  deleteAttachments(attachmentsToRemove);
+  const attachmentsData = await createAttachments(attachmentsToAdd);
+
+  const newProduct = await prisma.product.update({
+    where: {
+        id: id,
+    },
+    data: {
+        name: name,
+        slug: toSlug(name),
+        quantity: quantity,
+        price: price,
+        sale: sale,
+        description: description,
+        brandId: brandId,
+        categoryId: categoryId,
+        attachments: {
+            connect: attachmentsData.map(attachment => {
+                return {
+                    id: attachment.id,
+                };
+            }),
+        },
+    },
+  });
 
   return newProduct;
 }

@@ -20,10 +20,18 @@ export async function createAttachment(data: string, type: AttachmentType) {
     console.log(error);
     throw new Error("attachment ERRor");
   }
-  
+}
 
+export async function deleteAttachment(id: string) {
+  const attachment = await prisma.attachment.delete({
+    where: {
+        id: id,
+    },
+  });
 
-  
+  cloudinary.v2.uploader.destroy(attachment.name);
+
+  return attachment;
 }
 
 export async function createAttachments(attachments: string[]) {
@@ -32,4 +40,12 @@ export async function createAttachments(attachments: string[]) {
       return createAttachment(attachment, AttachmentType.IMAGE);
     })
   )
+}
+
+export async function deleteAttachments(attachments: Attachment[]) {
+  return await Promise.all(
+    attachments.map(attachment => {
+        return deleteAttachment(attachment.id);
+    }),
+  );
 }
