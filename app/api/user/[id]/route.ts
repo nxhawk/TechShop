@@ -16,6 +16,13 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     if (!id) {
         return NextResponse.json({ message: 'Missing id' }, { status: 400 });
     }
+    if (session.user.id === id) {
+      return NextResponse.json(
+          { message: 'Không thể tự bản thân' },
+          { status: 400 },
+      );
+    }
+
     const user = await removeUser(id);
     return NextResponse.json({ message: 'success', data: user });
   } catch (error) {

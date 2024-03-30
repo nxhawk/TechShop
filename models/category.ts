@@ -6,6 +6,15 @@ export async function listCategories(){
   return categories
 }
 
+export async function listCategoriesAlphabet() {
+  const categories = await prisma.category.findMany({
+    orderBy:{
+      slug:'asc'
+    }
+  })
+  return categories;
+}
+
 export async function createCategory(name: string) {
   const newCategory = await prisma.category.create({
     data: { 

@@ -61,6 +61,7 @@ const UserPagination = ({ usersList }: { usersList: UserWithImage[] }) => {
                   ))}
                 </tbody>
               </table>
+              
             </div>
           </div>
         </div>
