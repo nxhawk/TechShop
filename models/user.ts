@@ -1,8 +1,30 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
-import {AttachmentType} from "@prisma/client"
+import {
+  AttachmentType,
+  Product,
+  CartItem,
+  Attachment,
+  Category,
+  User,
+  Address
+} from "@prisma/client"
 import prisma from '../libs/prismadb';
 
+export type FullCartItem = CartItem & {
+  Product: Product & {
+      attachments: Attachment[];
+      category: Category | null;
+  };
+};
+
+export type UserWithAddresses = User & {
+  addresses: Address[];
+};
+
+export type UserWithImage = User & {
+  image: Attachment | null;
+};
 
 export const UserNotFound = new Error('User does not exist');
 export const InvalidCredentials = new Error('Invalid Credentials');
@@ -53,4 +75,56 @@ export async function auth(phone: string, password: string){
     }
 
   return user;
+}
+
+export async function numberOfUsers() {
+  const users = await prisma.user.count();
+  return users;
+}
+
+export async function listUsers(page: number, perPage: number) {
+  const users = await prisma.user.findMany({
+    skip: (page - 1) * perPage,
+    take: perPage,
+    include:{
+      addresses: true,
+      image: true
+    }
+  })
+
+  return users;
+}
+
+export async function removeUser(id: string) {
+  await prisma.user.delete({
+    where: {
+      id
+    }
+  })
+  await prisma.address.deleteMany({
+    where: {
+        userId: id,
+    },
+  });
+}
+
+export async function updateAdminRight(id: string) {
+  const user = await prisma.user.findUnique({
+    where:{
+      id
+    }
+  })
+
+  if (!user) {
+    throw UserNotFound;
+  }
+
+  const newUser = await prisma.user.update({
+    where: {id},
+    data:{
+      role: user.role === 'ADMIN' ? 'USER' : "ADMIN"
+    }
+  })
+
+  return newUser
 }

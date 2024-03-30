@@ -1,3 +1,4 @@
+import AllBrand from '@/app/components/admin/brand/AllBrand';
 import React from 'react'
 
 export const metadata = {
@@ -7,7 +8,9 @@ export const metadata = {
 
 const Page = () => {
   return (
-    <div>Page</div>
+    <div className='w-full'>
+      <AllBrand/>
+    </div>
   )
 }
 
