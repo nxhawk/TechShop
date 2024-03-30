@@ -2,13 +2,25 @@ import Link from 'next/link';
 import React from 'react'
 import { Category } from '@prisma/client';
 import CategoryForm from './CategoryForm';
+import { listCategories } from '@/models/category';
+import { toNonAccentVietnamese } from '@/utils/helper';
+import DeleteCategoryButton from './DeleteCategoryButton';
 
-const AllCategory = ({role}:{role: string}) => {
+async function getAllCategories() {
+  const res = await listCategories();
+  return res;
+}
+
+const AllCategory = async({role}:{role: string}) => {
+  const listCategories = await getAllCategories();
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
   const listCategoriesAlphabet = [] as Array<Array<Category>>;
   for (let i = 1; i <= alphabet.length; i++) {
       listCategoriesAlphabet.push([] as Array<Category>);
   }
+  listCategories.map(data=>{
+    listCategoriesAlphabet[toNonAccentVietnamese(data.name.charAt(0)).charCodeAt(0) - 'A'.charCodeAt(0)].push(data as Category);
+  })
 
   return (
     <div className='w-full bg-white px-10 py-10'>
@@ -32,6 +44,37 @@ const AllCategory = ({role}:{role: string}) => {
             <CategoryForm mode='add'/>
         </div>
       )}
+      {
+        alphabet.map((data, index)=>
+        listCategoriesAlphabet[data.charCodeAt(0) - 'A'.charCodeAt(0)].length > 0 &&(
+          <div className='w-full' id={data} key={index}>
+            <p className='text-4xl font-bold mb-4 mt-10'>{data}</p>
+            <hr className='mb-4'></hr>
+            <div className='w-full grid grid-cols-3'>
+            {listCategoriesAlphabet[data.charCodeAt(0) - 'A'.charCodeAt(0)].map(
+              data=>(
+                <div key={data.id} className='flex space-x-2 group'>
+                  <Link
+                      href={`/category/${data.slug}`}
+                      target={role === 'ADMIN' ? '_blank' : '_self'}
+                      className='mb-3 hover:text-amber-500'
+                  >
+                      {data.name}
+                  </Link>
+                  {role === 'ADMIN' && (
+                      <CategoryForm mode='update' data={data} />
+                  )}
+                  {role === 'ADMIN' && (
+                      <DeleteCategoryButton Category={data} />
+                  )}
+                </div>
+              )
+            )}
+            </div>
+          </div>
+        )
+        )
+      }
     </div>
   )
 }

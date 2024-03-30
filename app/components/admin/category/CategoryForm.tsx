@@ -20,6 +20,7 @@ const CategoryForm = (props: Props) => {
   const {
       register,
       handleSubmit,
+      reset,
       formState: { errors },
   } = useForm<Data>({
       mode: 'all',
@@ -45,6 +46,9 @@ const CategoryForm = (props: Props) => {
           Notify.success('Thêm danh mục thành công', {
               clickToClose: true,
           });
+          reset({
+            name:""
+          })
         } else {
           Notify.failure(json.message);
         }

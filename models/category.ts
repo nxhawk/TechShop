@@ -1,6 +1,11 @@
 import prisma from '../libs/prismadb';
 import { toSlug } from '@/utils/helper';
 
+export async function listCategories(){
+  const categories = await prisma.category.findMany();
+  return categories
+}
+
 export async function createCategory(name: string) {
   const newCategory = await prisma.category.create({
     data: { 
@@ -23,4 +28,14 @@ export async function updateCategory(id: string, name: string){
     }
   })
   return updatedCategory;
+}
+
+export async function deleteCategory(id: string) {
+  const deteledCategory = await prisma.category.delete({
+    where:{
+      id
+    }
+  })
+
+  return deteledCategory;
 }

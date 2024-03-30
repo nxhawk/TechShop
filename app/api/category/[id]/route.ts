@@ -1,7 +1,7 @@
 import { getErrorMessage } from '@/utils/helper';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { NextResponse } from 'next/server';
-import { updateCategory } from '@/models/category';
+import { updateCategory,deleteCategory } from '@/models/category';
 
 export async function PATCH(request: Request,
   {params}:{params:{id:string}})
@@ -39,6 +39,35 @@ export async function PATCH(request: Request,
       {
           status: 500,
       },
+    );
+  }
+}
+
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params;
+    if (!id) {
+        return NextResponse.json({ message: 'Missing id' }, { status: 400 });
+    }
+    const category = await deleteCategory(id);
+    return NextResponse.json({ message: 'success', data: category });
+  } catch (error) {
+    console.log('Error deleting category', getErrorMessage(error));
+
+    if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2023') {
+            return NextResponse.json({ message: 'Invalid category id' }, { status: 400 });
+        }
+        if (error.code === 'P2025') {
+            return NextResponse.json({ message: 'Category not found' }, { status: 400 });
+        }
+    }
+
+    return NextResponse.json(
+        { message: `Internal Server Error: ${getErrorMessage(error)}` },
+        {
+            status: 500,
+        },
     );
   }
 }
