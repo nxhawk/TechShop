@@ -5,7 +5,39 @@ import { getErrorMessage } from '@/utils/helper';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { NotEnoughQuantity, ProductNotFound } from '@/models/product';
 import { UserNotFound } from '@/models/user';
-import { createInvoice } from '@/models/invoice';
+import { createInvoice, listInvoices } from '@/models/invoice';
+
+export async function GET(request: Request) {
+    try {
+      const { searchParams } = new URL(request.url);
+      const from = searchParams.get('from') || undefined;
+
+      const session = await getServerSession(authOptions);
+      if (!session || !session.user) {
+          return NextResponse.json({ message: 'Unauthenticated' }, { status: 401 });
+      }
+
+      if (from === 'admin') {
+          if (session.user.role !== 'ADMIN') {
+              return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+          }
+          const invoices = await listInvoices();
+          return NextResponse.json({ message: 'success', data: invoices });
+      }
+
+      const invoices = await listInvoices(session.user.id);
+      return NextResponse.json({ message: 'success', data: invoices });
+    } catch (error) {
+      console.log('Error getting all invoices', getErrorMessage(error));
+
+      return NextResponse.json(
+          { message: `Internal Server Error: ${getErrorMessage(error)}` },
+          {
+              status: 500,
+          },
+      );
+    }
+}
 
 export async function POST(request: Request) {
   try {
