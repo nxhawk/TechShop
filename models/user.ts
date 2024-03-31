@@ -207,3 +207,32 @@ export async function updateAdminRight(id: string) {
 
   return newUser
 }
+
+export async function changePassword(id: string, password: string, newPassword: string) {
+  const user = await prisma.user.findUnique({
+    where:{
+      id
+    }
+  });
+
+  if (!user){
+    throw UserNotFound;
+  }
+
+  const match = await bcrypt.compare(password, user.password);
+  if (!match){
+    throw InvalidCredentials;
+  }
+
+  const hashedPassword= await bcrypt.hash(newPassword,10);
+  const res = await prisma.user.update({
+    where:{
+      id
+    },
+    data:{
+      password: hashedPassword
+    }
+  });
+
+  return res;
+}
