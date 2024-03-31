@@ -10,6 +10,7 @@ import {
   Address
 } from "@prisma/client"
 import prisma from '../libs/prismadb';
+import { createAttachment, deleteAttachment } from './attachment';
 
 export type FullCartItem = CartItem & {
   Product: Product & {
@@ -30,6 +31,24 @@ export const UserNotFound = new Error('User does not exist');
 export const InvalidCredentials = new Error('Invalid Credentials');
 export const PhoneAlreadyExists = new Error('Phone number already exists');
 export const Unauthorized = new Error('Unauthorized');
+
+export async function getUser(userId: string) {
+  const user = await prisma.user.findUnique({
+    where:{
+      id: userId,
+    },
+    include:{
+      addresses:true,
+      image:true,
+    }
+  })
+
+  if (!user){
+    throw UserNotFound
+  }
+
+  return user;
+}
 
 export async function createUser(name: string, phone: string, password: string) {
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -54,6 +73,66 @@ export async function createUser(name: string, phone: string, password: string) 
   return user;
 }
 
+export async function updateUser(
+  id: string,
+  name: string,
+  phone: string,
+  email: string,
+  image: string,
+){
+
+  const user = await prisma.user.findUnique({
+    where:{id},
+    include:{
+      image:true
+    }
+  })
+
+  if (!user){
+    throw UserNotFound;
+  }
+
+  const u = await prisma.user.findFirst({
+    where:{
+      phone,
+      id:{
+        not:id,
+      }
+    }
+  });
+
+  if (u){
+    throw PhoneAlreadyExists;
+  }
+
+  let userImage: Attachment | null = user.image;
+  if (userImage?.path !== image){
+    if (userImage){
+      deleteAttachment(userImage?.id)
+    }
+
+    userImage = await createAttachment(image, AttachmentType.IMAGE);
+  }
+
+  const newUser = await prisma.user.update({
+    where:{id},
+    data:{
+      name,
+      phone,
+      email,
+      image:{
+        connect:{
+          id:userImage?.id
+        }
+      }
+    },
+    include:{
+      image:true
+    }
+  })
+
+  return newUser;
+}
 
 export async function auth(phone: string, password: string){
   const user = await prisma.user.findUnique({
