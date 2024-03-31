@@ -1,9 +1,11 @@
 import React from 'react'
 import { getServerSession } from 'next-auth';
 import Link from 'next/link';
+import AvatarButton from './AvatarButton';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 const UserButtons = async () => {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   return (
     <>
       {!session || !session.user ? (
@@ -28,7 +30,7 @@ const UserButtons = async () => {
       ):(
         <>
           <li>
-            
+            <AvatarButton user={session.user} />
           </li>
         </>
       )}
