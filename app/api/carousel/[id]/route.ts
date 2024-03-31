@@ -1,4 +1,4 @@
-import { updateCarousel } from '@/models/carousel';
+import { updateCarousel, deleteCarousel } from '@/models/carousel';
 import { getErrorMessage } from '@/utils/helper';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { NextResponse } from 'next/server';
@@ -54,4 +54,33 @@ export async function PATCH(
             },
         );
   }
+}
+
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+    try {
+      const { id } = params;
+      if (!id) {
+          return NextResponse.json({ message: 'Missing id' }, { status: 400 });
+      }
+      const carousel = await deleteCarousel(id);
+      return NextResponse.json({ message: 'success', data: carousel });
+    } catch (error) {
+      console.log('Error deleting carousel', getErrorMessage(error));
+
+        if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === 'P2023') {
+                return NextResponse.json({ message: 'Invalid carousel id' }, { status: 400 });
+            }
+            if (error.code === 'P2025') {
+                return NextResponse.json({ message: 'Carousel not found' }, { status: 400 });
+            }
+        }
+
+        return NextResponse.json(
+            { message: `Internal Server Error: ${getErrorMessage(error)}` },
+            {
+                status: 500,
+            },
+        );
+    }
 }

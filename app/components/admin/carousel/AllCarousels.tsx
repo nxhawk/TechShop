@@ -2,6 +2,8 @@ import { FullCarousel } from '@/models/carousel';
 import Image from 'next/image';
 import { defaultValue } from '../../Constant';
 import Link from 'next/link';
+import DeleteCategoryButton from '../category/DeleteCategoryButton';
+import DeleteCarouselButton from './DeleteCarouselButton';
 
 const AllCarousels = ({carousels}:{carousels:FullCarousel[]}) => {
   return (
@@ -27,6 +29,7 @@ const AllCarousels = ({carousels}:{carousels:FullCarousel[]}) => {
                 Chỉnh sửa
               </button>
             </Link>
+            <DeleteCarouselButton id={data.id}/>
           </div>
         </div>
       ))}

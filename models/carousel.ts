@@ -81,3 +81,10 @@ export async function updateCarousel(id: string, image: string, url: string, mai
 
   return newCarousel;
 }
+
+export async function deleteCarousel(id: string) {
+  const res =await prisma.carousel.delete({
+    where:{id}
+  })
+  return res;
+}
