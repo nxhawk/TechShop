@@ -115,6 +115,22 @@ export async function addProductToCart(userId: string, productId: string, quanti
   return newCart.CartItem.find(item => item.productId === productId);
 }
 
+export async function changeProductQuantityInCart(cartItemId: string, quantity: number) {
+  const cartItem = await prisma.cartItem.update({
+    where:{
+      id:cartItemId
+    },
+    data:{
+      quantity
+    },
+    include:{
+      Product:true
+    }
+  })
+
+  return cartItem;
+}
+
 export async function removeProductFromCart(userId: string, cartItemId: string) {
   const cartItem = await prisma.user.update({
     where:{
