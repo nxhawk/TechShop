@@ -2,7 +2,10 @@ import prisma from '@/libs/prismadb';
 import {
     NotEnoughQuantity,
     ProductNotFound,
-    decreaseProductQuantity
+    decreaseProductQuantity,
+    increaseProductQuantity,
+    increaseProductSold,
+    decreaseProductSold
 } from './product';
 import { UserNotFound } from './user';
 import {
@@ -38,6 +41,31 @@ export type InvoiceItemWithProduct = InvoiceItem & {
 export const InvoiceNotFound = new Error('Invoice not found');
 export const InvalidStatus = new Error('Invalid status');
 export const InvoiceNotDelivered = new Error('Invoice not delivered');
+
+export async function listInvoices(userId?: string) {
+  return await prisma.invoice.findMany({
+    where:{
+      userId
+    },
+    orderBy:{
+      createAt:'desc'
+    },
+    include:{
+      address: true,
+      InvoicesItem:{
+        include:{
+          Product:{
+            include:{
+              attachments: true,
+              category: true,
+              brand: true,
+            }
+          }
+        }
+      }
+    }
+  })
+}
 
 export async function createInvoice(
   userId: string,
@@ -137,4 +165,128 @@ export async function createInvoice(
   });
 
   return invoice;
+}
+
+export async function updateInvoice(id: string, status: string) {
+  if (
+    [
+        Status.PENDING,
+        Status.PROCESSING,
+        Status.DELIVERING,
+        Status.DELIVERED,
+        Status.CANCELLED,
+        Status.RETURNING,
+        Status.RETURNED,
+    ].indexOf(status as Status) === -1
+  ) {
+    throw InvalidStatus;
+  }
+
+  const newStatus = status as Status;
+
+  const invoice= await prisma.invoice.findUnique({
+    where:{id},
+    include:{
+      InvoicesItem:{
+        include:{
+          Product:true
+        }
+      }
+    }
+  })
+
+  if (!invoice) {
+    throw InvoiceNotFound;
+  }
+  
+  switch(newStatus){
+    case Status.PENDING: {
+      throw InvalidStatus;
+    }
+    case Status.PROCESSING: {
+      if (invoice.status !== Status.PENDING) {
+          throw InvalidStatus;
+      }
+      break;
+    }
+    case Status.DELIVERING: {
+      if (invoice.status !== Status.PROCESSING) {
+          throw InvalidStatus;
+      }
+      break;
+    }
+    case Status.DELIVERED: {
+      if (invoice.status !== Status.DELIVERING) {
+        throw InvalidStatus;
+      }
+      invoice.InvoicesItem.forEach(async item => {
+        return increaseProductSold(item.productId, item.quantity);
+      });
+      break;
+    }
+    case Status.CANCELLED: {
+      if (invoice.status !== Status.PENDING) {
+        throw InvalidStatus;
+      }
+      invoice.InvoicesItem.forEach(async item => {
+        return increaseProductQuantity(item.productId, item.quantity);
+      });
+      break;
+    }
+    case Status.RETURNING: {
+      if (invoice.status !== Status.DELIVERED) {
+        throw InvalidStatus;
+      }
+      // If status is returning, update product sold
+      invoice.InvoicesItem.forEach(async item => {
+        return decreaseProductSold(item.productId, item.quantity);
+      });
+      break;
+    }
+    default:
+      throw InvalidStatus;
+  }
+
+  return await prisma.invoice.update({
+    where:{id},
+    data:{
+      status:{
+        set: status as Status
+      }
+    },
+    include:{
+      address: true,
+      InvoicesItem:{
+        include:{
+          Product:{
+            include:{
+              attachments: true,
+              category: true,
+              brand: true,
+            }
+          }
+        }
+      }
+    }
+  })
+}
+
+export async function getInvoiceById(id: string) {
+  return await prisma.invoice.findUnique({
+    where:{id},
+    include:{
+      address:true,
+      InvoicesItem:{
+        include:{
+          Product:{
+            include:{
+              attachments: true,
+              category: true,
+              brand: true,
+            }
+          }
+        }
+      }
+    }
+  })
 }

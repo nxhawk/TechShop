@@ -394,3 +394,29 @@ export async function decreaseProductQuantity(id: string, quantity: number) {
     }
   })
 }
+
+export async function increaseProductSold(id: string, quantity: number) {
+  return await prisma.product.update({
+    where: {
+        id,
+    },
+    data: {
+        sold: {
+            increment: quantity,
+        },
+    },
+  });
+}
+
+export async function decreaseProductSold(id: string, quantity: number) {
+  return await prisma.product.update({
+    where: {
+        id,
+    },
+    data: {
+        sold: {
+            decrement: quantity,
+        },
+    },
+  });
+}
