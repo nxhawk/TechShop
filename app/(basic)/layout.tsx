@@ -5,6 +5,7 @@ import Header from '../components/header/Header';
 import Footer from '../components/footer/Footer';
 import FAB from '../components/widgets/fab/FAB';
 import AuthContext from '../context/AuthContext';
+import { GlobalContextProvider } from '../context/GlobalContext';
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return(
@@ -12,14 +13,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body suppressHydrationWarning={true} className='bg-gray-200'>
         <AuthContext>
           <ToasterContext/>
-          <>
+          <GlobalContextProvider>
             <Header/>
             <main className='max-w-screen-xl mx-auto align-middle items-center'>
                 {children}
             </main>
             <FAB/>
             <Footer/>
-          </>
+          </GlobalContextProvider>
         </AuthContext>
       </body>
   </html>

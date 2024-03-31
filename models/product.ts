@@ -54,6 +54,33 @@ export async function getProduct(id?: string) {
   return product;
 }
 
+export async function getProductBySlug(slug: string) {
+  const product = await prisma.product.findFirst({
+      where: {
+          slug: slug,
+      },
+      include: {
+          attachments: true,
+          brand: true,
+          category: true,
+          Reviews: {
+              include: {
+                  User: {
+                      select: {
+                          id: true,
+                          name: true,
+                          email: true,
+                          image: true,
+                      },
+                  },
+              },
+          },
+      },
+  });
+  return product;
+}
+
+
 export async function listProducts(categorySlug?: string, brandSlug?: string) {
   const products =await prisma.product.findMany({
     where:{
