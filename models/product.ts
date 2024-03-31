@@ -54,6 +54,38 @@ export async function getProduct(id?: string) {
   return product;
 }
 
+export async function listProducts(categorySlug?: string, brandSlug?: string) {
+  const products =await prisma.product.findMany({
+    where:{
+      category:{
+        slug:categorySlug!=null?categorySlug:undefined,
+      },
+      brand:{
+        slug:brandSlug!=null?brandSlug:undefined,
+      }
+    },
+    include:{
+      attachments: true,
+      brand: true,
+      category: true,
+      Reviews:{
+        include:{
+          User:{
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          }
+        }
+      }
+    }
+  })
+
+  return products
+}
+
 export async function numberOfProducts(categorySlug?: string, min?: number, max?: number) {
   const products = await prisma.product.count({
     where:{
@@ -271,4 +303,45 @@ export async function deleteProduct(id: string) {
   }
 
   return product;
+}
+
+export async function listTrendingProducts(
+  categorySlug?: string,
+  brandSlug?: string,
+  take?: number,
+){
+  if (!take) take = 10;
+  const products = await prisma.product.findMany({
+    take:take,
+    where:{
+      category: {
+        slug: categorySlug != null ? categorySlug : undefined,
+      },
+      brand: {
+        slug: brandSlug != null ? brandSlug : undefined,
+      },
+    },
+    include:{
+      attachments: true,
+      brand: true,
+      category: true,
+      Reviews:{
+        include:{
+          User:{
+            select:{
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            }
+          }
+        }
+      }
+    },
+    orderBy:{
+      sold:'desc'
+    }
+  })
+
+  return products;
 }
