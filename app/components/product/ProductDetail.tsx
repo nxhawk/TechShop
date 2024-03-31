@@ -12,6 +12,8 @@ import CarouselThumbnail from './CarouselThumbnail';
 import { useGlobalContext } from '@/app/context/GlobalContext';
 
 import InputQuantity from '../widgets/inputQuantity/InputQuantity';
+import { FullReview } from '@/models/review';
+import ReviewItem from './ReviewItem';
 
 interface Props {
   product: FullProduct;
@@ -20,11 +22,60 @@ interface Props {
 
 const perPage = 10;
 
+function useReview(url: string) {
+  const [review, setReview] = useState(null);
+  useEffect(()=>{
+    Block.dots('.review');
+    let ignore = false;
+    fetch(url)
+      .then(response => response.json())
+      .then(json => {
+          if (!ignore) {
+              setReview(json.data);
+          }
+      })
+      .catch(console.log);
+    Block.remove('.review');
+    return () => {
+      ignore = true;
+    };
+  },[url])
+  return review;
+}
+
 const ProductDetail = ({ product, similarProducts }: Props) => {
+  const review = useReview(`/api/review/product/${product.id}`);
   const router = useRouter();
   const { user, updateMyCart } = useGlobalContext();
   const [imgSelect, setImgSelect] = React.useState<number>(0);
   const [quantity, setQuantity] = React.useState<number>(1);
+  const [filter, setFilter] = useState(0);
+  const [reviewFilterList, setReviewFilterList] = useState([] as Array<FullReview>);
+  const [cur, setCur] = useState([] as Array<FullReview>);
+  const [page, setPage] = useState(1);
+  const [pageText, setPageText] = useState('1');
+
+  useEffect(()=>{
+    let reviewList = (review || []) as Array<FullReview>;
+    if (filter == 0) {
+      setReviewFilterList(reviewList);
+    }else{
+      reviewList = reviewList.filter(function (a) {
+        return a.rating == filter;
+      });
+      setReviewFilterList(reviewList);
+    }
+    setCur(reviewList);
+    if (!reviewList) return;
+    if (page < 1 || page > Math.ceil(reviewList.length / perPage)) return;
+
+    let arr = [];
+    for (let i = 0; i < reviewList.length; i += perPage) {
+        arr.push(reviewList.slice(i, i + perPage));
+    }
+    arr = arr[page - 1];
+    setReviewFilterList(arr);
+  },[filter, page, review])
 
   async function addToCart() {
     if (user == null) {
@@ -205,9 +256,149 @@ const ProductDetail = ({ product, similarProducts }: Props) => {
             </div>
           </div>
           <div className='ml-8'>
-
+            <Button
+                className={
+                    'bg-white text-xl mr-5 px-8 py-2 ' +
+                    (filter == 0 ? 'border border-amber-500 text-amber-500' : '')
+                }
+                onClick={() => {
+                    setFilter(0);
+                    setPage(1);
+                    setPageText('1');
+                }}
+            >
+                Tất cả
+            </Button>
+            <Button
+                className={
+                    'bg-white text-xl mr-5 px-5 py-2 ' +
+                    (filter == 5 ? 'border border-amber-500 text-amber-500' : '')
+                }
+                onClick={() => {
+                    setFilter(5);
+                    setPage(1);
+                    setPageText('1');
+                }}
+            >
+                5 sao
+            </Button>
+            <Button
+                className={
+                    'bg-white text-xl mr-5 px-5 py-2 ' +
+                    (filter == 4 ? 'border border-amber-500 text-amber-500' : '')
+                }
+                onClick={() => {
+                    setFilter(4);
+                    setPage(1);
+                    setPageText('1');
+                }}
+            >
+                4 sao
+            </Button>
+            <Button
+                className={
+                    'bg-white text-xl mr-5 px-5 py-2 ' +
+                    (filter == 3 ? 'border border-amber-500 text-amber-500' : '')
+                }
+                onClick={() => {
+                    setFilter(3);
+                    setPage(1);
+                    setPageText('1');
+                }}
+            >
+                3 sao
+            </Button>
+            <Button
+                className={
+                    'bg-white text-xl mr-5 px-5 py-2 ' +
+                    (filter == 2 ? 'border border-amber-500 text-amber-500' : '')
+                }
+                onClick={() => {
+                    setFilter(2);
+                    setPage(1);
+                    setPageText('1');
+                }}
+            >
+                2 sao
+            </Button>
+            <Button
+                className={
+                    'bg-white text-xl mr-5 px-5 py-2 ' +
+                    (filter == 1 ? 'border border-amber-500 text-amber-500' : '')
+                }
+                onClick={() => {
+                    setFilter(1);
+                    setPage(1);
+                    setPageText('1');
+                }}
+            >
+                1 sao
+            </Button>
           </div>
         </div>
+
+        <div className='review'>
+          {reviewFilterList.map(item => (
+              <ReviewItem
+                  key={item.id}
+                  image={item.User?.image?.path || '/images/logo.png'}
+                  reviewText={item.comment}
+                  star={item.rating}
+                  username={item.User?.name || ''}
+                  time={item.createdAt?.toString() || ''}
+              />
+          ))}
+        </div>
+
+        {/* Pagination */}
+        <div className='flex flex-row items-center justify-end mt-4'>
+          <Button
+              className=' bg-white px-4 py-2'
+              onClick={() => {
+                  if (page - 1 < 1) return;
+                  setPageText(`${page - 1}`);
+                  setPage(page - 1);
+              }}
+          >
+              {'<'}
+          </Button>
+          <input
+              value={pageText}
+              onChange={event => {
+                  setPageText(event.target.value);
+              }}
+              onKeyUp={event => {
+                  if (event.key === 'Enter') {
+                      const value = parseInt(event.currentTarget.value);
+                      if (value < 1 || value > Math.ceil(cur.length / perPage)) {
+                          setPageText(`${page}`);
+                          return;
+                      }
+                      setPage(value);
+                  }
+              }}
+              type='number'
+              className='w-12 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none mx-2 px-2 py-2 rounded-lg bg-amber-500 text-white'
+          ></input>
+          <Button
+              className=' bg-white px-4 py-2'
+              onClick={() => {
+                  if (page + 1 > Math.ceil(cur.length / perPage)) return;
+                  setPageText(`${page + 1}`);
+                  setPage(page + 1);
+              }}
+          >
+              {'>'}
+          </Button>
+        </div>
+        
+      </div>
+      {/* List item same categories */}
+      <div className='flex flex-col my-12 '>
+          <h2 className='font-medium uppercase text-lg tracking-wider mb-6 text-gray-500'>
+              Các sản phẩm cùng thể loại
+          </h2>
+          <ListProduct products={similarProducts} />
       </div>
     </>
   )
