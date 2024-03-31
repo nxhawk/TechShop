@@ -29,3 +29,45 @@ export async function GET() {
   }
 }
 
+export async function POST(request: Request){
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+        return NextResponse.json({ message: 'Unauthenticated' }, { status: 401 });
+    }
+
+    const { name, phone, area, address } = await request.json();
+    if (!name || !phone || !area || !address) {
+        return NextResponse.json(
+            {
+                message: 'Missing name, phone, area or address',
+            },
+            { status: 400 },
+        );
+    }
+
+    const addressData = await createAddress(session.user.id, name, phone, area, address);
+
+    return NextResponse.json({
+        message: 'success',
+        data: addressData,
+    });
+
+  } catch (error) {
+    console.log('Error creating address', getErrorMessage(error));
+
+    if (error instanceof SyntaxError) {
+        return NextResponse.json(
+            { message: `Invalid JSON: ${getErrorMessage(error)}` },
+            { status: 400 },
+        );
+    }
+
+    return NextResponse.json(
+        { message: `Internal Server Error: ${getErrorMessage(error)}` },
+        {
+            status: 500,
+        },
+    );
+  }
+}

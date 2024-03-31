@@ -63,3 +63,111 @@ export const SortingOptions = {
 };
 
 export const ratingText = ['Rất tệ', 'Không hài lòng', 'Bình thường', 'Hài lòng', 'Tuyệt vời'];
+
+export const provinceData =[
+    {
+        _id: '0001',
+        name: 'Tiền Giang',
+        slug: 'tien-giang',
+        type: 'tinh',
+        name_with_type: 'tinh-tien-giang',
+        code: '0001',
+        isDeleted: false,
+    },
+    {
+      _id: '0002',
+      name: 'An Giang',
+      slug: 'an-giang',
+      type: 'tinh',
+      name_with_type: 'tinh-an-giang',
+      code: '0002',
+      isDeleted: false,
+    },
+    {
+      _id: '0003',
+      name: 'Kiên Giang',
+      slug: 'kien-giang',
+      type: 'tinh',
+      name_with_type: 'tinh-kien-giang',
+      code: '0003',
+      isDeleted: false,
+    },
+    {
+      _id: '0004',
+      name: 'Cao Bằng',
+      slug: 'cao-bang',
+      type: 'tinh',
+      name_with_type: 'tinh-cao-bang',
+      code: '0004',
+      isDeleted: false,
+    }
+]
+
+export const districtData =[
+  {
+      _id: '0001',
+      name: 'Gò Công Đông',
+      slug: 'go-cong-dong',
+      type: 'huyen',
+      name_with_type: 'huyen-go-cong-dong',
+      code: '0001',
+      isDeleted: false,
+  },
+  {
+    _id: '0002',
+    name: 'Cái Bè',
+    slug: 'cai-be',
+    type: 'huyen',
+    name_with_type: 'huyen-cai-be',
+    code: '0002',
+    isDeleted: false,
+  },
+  {
+    _id: '0003',
+    name: 'Cai Lậy',
+    slug: 'cai-lay',
+    type: 'huyen',
+    name_with_type: 'huyen-cai-lay',
+    code: '0003',
+    isDeleted: false,
+  },
+]
+
+export const villageData =[
+  {
+      _id: '0001',
+      name: 'Kiểng Phước',
+      slug: 'kieng-phuoc',
+      type: 'xa',
+      name_with_type: 'xa-kieng-phuoc',
+      code: '0001',
+      isDeleted: false,
+  },
+  {
+    _id: '0002',
+    name: 'Tân Phước',
+    slug: 'tan-phuoc',
+    type: 'xa',
+    name_with_type: 'xa-tan-phuoc',
+    code: '0002',
+    isDeleted: false,
+  },
+  {
+    _id: '0003',
+    name: 'Tân Đông',
+    slug: 'tan-dong',
+    type: 'xa',
+    name_with_type: 'xa-tan-dong',
+    code: '0003',
+    isDeleted: false,
+  },
+  {
+    _id: '0004',
+    name: 'Tân Tây',
+    slug: 'tan-tay',
+    type: 'xa',
+    name_with_type: 'xa-tan-tay',
+    code: '0004',
+    isDeleted: false,
+  },
+]
