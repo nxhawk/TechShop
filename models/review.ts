@@ -1,6 +1,7 @@
 import prisma from '@/libs/prismadb';
 import { Attachment, Brand, Category, Review, Status } from '@prisma/client';
 import { Unauthorized } from './user';
+import { InvoiceNotDelivered, InvoiceNotFound } from './invoice';
 
 export type FullReview = Review & {
   User: {
@@ -118,4 +119,69 @@ export async function getReviewByProductId(id: string) {
   })
 
   return review;
+}
+
+export async function getReviewOfUserAboutProduct(productId: string, userId: string) {
+  const review = await prisma.review.findFirst({
+      where: {
+          userId: userId,
+          productId: productId,
+      },
+  });
+  return review;
+}
+
+export async function createReview(
+  userId: string,
+  invoiceItemId: string,
+  rating: number,
+  comment: string,
+){
+  const invoice = await prisma.invoice.findFirst({
+    where:{
+      User:{
+        id: userId
+      },
+      InvoicesItem:{
+        some:{
+          id: invoiceItemId
+        }
+      },
+    },
+    include:{
+      InvoicesItem:true
+    }
+  })
+
+  if (!invoice) {
+    throw InvoiceNotFound;
+  }
+
+  if (invoice.status !== Status.DELIVERED) {
+    throw InvoiceNotDelivered;
+  }
+
+  const productId = invoice.InvoicesItem.find(item => item.id === invoiceItemId)?.productId;
+  if (!productId) {
+    throw InvoiceNotFound;
+  }
+
+  const review = await prisma.review.findFirst({
+    where: {
+        userId: userId,
+        productId: productId,
+    },
+  });
+  if (review) {
+      throw Error('Bạn đã đánh giá sản phẩm này rồi!');
+  }
+
+  return await prisma.review.create({
+    data:{
+      rating,
+      comment,
+      productId,
+      userId
+    }
+  })
 }

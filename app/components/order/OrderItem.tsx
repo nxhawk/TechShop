@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { Loading, Notify } from 'notiflix';
 import { defaultValue } from '../Constant';
 import Button from '../widgets/button/Button';
-//import ReBuyAndReview from './ReBuyAndReview';
+import ReBuyAndReview from './ReBuyAndReview';
 
 interface Props {
   item?: InvoiceItemWithProduct;
@@ -23,9 +23,19 @@ const OrderItem = (props: Props) => {
   const { user, updateMyCart } = useGlobalContext();
   const router = useRouter();
 
+  async function addToCart() {
+    
+  }
+
   async function cancelOrder(orderID: string) {
     
   }
+
+  async function buyNow() {
+    await addToCart();
+    router.push('/cart');
+  }
+
   return (
     <>
       <div className='flex flex-row py-3 cursor-pointer w-full'>
@@ -79,6 +89,16 @@ const OrderItem = (props: Props) => {
                       </Button>
                   </div>
               </div>
+          )}
+
+          {props.invoice?.status === Status.DELIVERED && (
+              <ReBuyAndReview
+                  buyNow={buyNow}
+                  invoiceItemId={props.item?.id}
+                  productId={product?.id}
+                  productSlug={product?.slug}
+                  invoiceId={props.invoice.id}
+              />
           )}
         </>
       )}
