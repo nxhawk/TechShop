@@ -372,3 +372,25 @@ export async function listTrendingProducts(
 
   return products;
 }
+
+export async function increaseProductQuantity(id: string, quantity: number) {
+  return await prisma.product.update({
+    where:{id},
+    data:{
+      quantity:{
+        increment:quantity
+      }
+    }
+  })
+}
+
+export async function decreaseProductQuantity(id: string, quantity: number) {
+  return await prisma.product.update({
+    where:{id},
+    data:{
+      quantity:{
+        decrement:quantity
+      }
+    }
+  })
+}
