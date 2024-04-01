@@ -43,7 +43,7 @@ export async function listReviews(
     skip:page!=undefined && perPage!=undefined ?(page-1)*perPage:0,
     where:{
       rating:star,
-      userId:userId,
+      userId,
       OR:[
         {
           comment:{
@@ -68,6 +68,8 @@ export async function listReviews(
               }
             ]
           },
+        },
+        {
           Product:{
             name:{
               contains: keyword,
@@ -102,6 +104,50 @@ export async function listReviews(
   return res;
 }
 
+export async function numberOfReviews(star?: number, keyword?: string) {
+  const res = await prisma.review.count({
+    where:{
+      rating: star,
+      OR:[
+        {
+          comment:{
+            contains: keyword,
+            mode: 'insensitive'
+          }
+        },
+        {
+          User:{
+            OR:[
+              {
+                name:{
+                  contains: keyword,
+                  mode: 'insensitive'
+                }
+              },
+              {
+                phone:{
+                  contains: keyword,
+                  mode: 'insensitive'
+                }
+              }
+            ]
+          }
+        },
+        {
+          Product:{
+            name:{
+              contains: keyword,
+              mode: 'insensitive'
+            }
+          }
+        }
+      ]
+    }
+  })
+
+  return res;
+}
+
 export async function getReviewByProductId(id: string) {
   const review = await prisma.review.findMany({
     where:{
@@ -118,6 +164,15 @@ export async function getReviewByProductId(id: string) {
     }
   })
 
+  return review;
+}
+
+export async function getReviewById(id: string) {
+  const review = await prisma.review.findFirst({
+      where: {
+          id,
+      },
+  });
   return review;
 }
 
@@ -183,5 +238,32 @@ export async function createReview(
       productId,
       userId
     }
+  })
+}
+
+export async function deleteReview(id: string, userId: string) {
+  const review = await prisma.review.findFirst({
+    where:{
+      id
+    },
+    include:{
+      User: true,
+    }
+  })
+
+  if (!review) {
+    throw ReviewNotFound;
+  }
+
+  if (review.userId !== userId && review.User.role !== 'ADMIN') {
+    throw Unauthorized;
+  }
+
+  if (review.User.role !== 'ADMIN') {
+    throw Unauthorized;
+  }
+
+  return await prisma.review.delete({
+    where:{id}
   })
 }
