@@ -57,3 +57,8 @@ export async function deleteCategory(id: string) {
 
   return deteledCategory;
 }
+
+export default async function numberOfCategories() {
+  const res=await prisma.category.count();
+  return res;
+}

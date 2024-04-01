@@ -290,3 +290,8 @@ export async function getInvoiceById(id: string) {
     }
   })
 }
+
+export default async function numberOfInvoices() {
+  const res = await prisma.invoice.count();
+  return res;
+}
